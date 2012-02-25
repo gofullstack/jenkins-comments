@@ -1,0 +1,14 @@
+{
+    "name": "jenkins-pull-request-commenter"
+  , "version": "0.0.1"
+  , "private": true
+  , "dependencies": {
+      "express": "2.5.7"
+    , "jade": ">= 0.0.1"
+    , "coffee-script": "1.2.x"
+    , "underscore": "*"
+    , "underscore.string": "*"
+    , "request": "*"
+    , "async": "*"
+  }
+}
