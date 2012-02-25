@@ -4,24 +4,12 @@ express = require 'express'
 _       = require 'underscore'
 _s      = require 'underscore.string'
 
-class BuildResult
-  constructor: (@sha, @job, @user_repo, @succeeded) ->
-
-  @fromRequest: (req) ->
-    sha = req.param 'sha'
-    job = parseInt req.param 'job'
-    succeeded = req.param('status') is 'success'
-    user_repo = "#{req.param 'user'}/#{req.param 'repo'}"
-    new BuildResult sha, job, user_repo, succeeded
-
 class PullRequestCommenter
   BUILDREPORT = "**Build Status**:"
 
-  constructor: (build_result) ->
-    {@sha, @succeeded, @job} = build_result
-    [@user, @repo] = build_result.user_repo.split '/'
+  constructor: (@sha, @job, @user, @repo, @succeeded) ->
     @job_url = "#{process.env.JENKINS_URL}/job/#{@repo}/#{@job}"
-    @api = "https://#{process.env.GITHUB_USER_LOGIN}:#{process.env.GITHUB_USER_PASSWORD}@api.github.com/#{build_result.user_repo}"
+    @api = "https://#{process.env.GITHUB_USER_LOGIN}:#{process.env.GITHUB_USER_PASSWORD}@api.github.com/#{@user}/#{@repo}"
 
   post: (path, obj, cb) =>
     request.post { uri: "#{@api}#{path}", json: obj }, (e, r, body) ->
@@ -89,8 +77,6 @@ class PullRequestCommenter
       @makePullComment
     ], cb
 
-
-# Configuration
 app = module.exports = express.createServer()
 
 app.configure 'development', ->
@@ -102,10 +88,14 @@ app.configure 'production', ->
 
 # Jenkins lets us know when a build has failed or succeeded.
 app.get '/jenkins/post_build', (req, res) ->
-  result = BuildResult.fromRequest req
+  sha = req.param 'sha'
+  job = parseInt req.param 'job'
+  user = req.param 'user'
+  repo = req.param 'repo'
+  succeeded = req.param('status') is 'success'
 
   # Look for an open pull request with this SHA and make comments.
-  commenter = new PullRequestCommenter result
+  commenter = new PullRequestCommenter sha, job, user, repo, succeeded
   commenter.updateComments (e, r) -> console.log e if e?
   res.send 'Ok', 200
 
