@@ -1,5 +1,3 @@
-# Automated Jenkins Comments on GitHub Pull Requests
-
 Configure the post-build hook and launch it on Heroku:
 
 ```
