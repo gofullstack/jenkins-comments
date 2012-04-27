@@ -1,6 +1,7 @@
 async   = require 'async'
 request = require 'request'
 express = require 'express'
+redis   = require("redis").createClient()
 _       = require 'underscore'
 _s      = require 'underscore.string'
 
@@ -87,6 +88,9 @@ class PullRequestCommenter
 
 app = module.exports = express.createServer()
 
+app.configure ->
+  app.use express.bodyParser()
+
 app.configure 'development', ->
   app.set "port", 3000
 
@@ -103,14 +107,30 @@ app.get '/jenkins/post_build', (req, res) ->
   repo = req.param 'repo'
   succeeded = req.param('status') is 'success'
 
+  redis.hmset sha, {
+    "job_name": job_name,
+    "job_number": job_number,
+    "user": user,
+    "repo": repo,
+    "succeeded": succeeded
+  }
+
   # Look for an open pull request with this SHA and make comments.
   commenter = new PullRequestCommenter sha, job_name, job_number, user, repo, succeeded
   commenter.updateComments (e, r) -> console.log e if e?
-  res.send 'Ok', 200
+  res.send 200
 
 # GitHub lets us know when a pull request has been opened.
 app.post '/github/post_receive', (req, res) ->
-  console.dir req.body
-  res.send 'Ok', 200
+  if req.body.pull_request
+    sha = req.body.pull_request.head.sha
+
+    redis.hgetall sha, (err, obj) ->
+      commenter = new PullRequestCommenter sha, obj.job_name, obj.job_number, obj.user, obj.repo, obj.succeeded
+      commenter.updateComments (e, r) -> console.log e if e?
+
+    res.send 201
+  else
+    res.send 404
 
 app.listen app.settings.port
