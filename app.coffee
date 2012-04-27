@@ -94,13 +94,12 @@ class PullRequestCommenter
 
 app = module.exports = express.createServer()
 
-app.configure ->
-  app.use express.bodyParser()
-
 app.configure 'development', ->
+  app.use express.bodyParser()
   app.set "port", 3000
 
 app.configure 'production', ->
+  app.use express.bodyParser()
   app.use express.errorHandler()
   app.set "port", parseInt process.env.PORT
 
