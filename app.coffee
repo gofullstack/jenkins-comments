@@ -113,6 +113,7 @@ app.get '/jenkins/post_build', (req, res) ->
   repo = req.param 'repo'
   succeeded = req.param('status') is 'success'
 
+  # Store the status of this sha for later
   redis.hmset sha, {
     "job_name": job_name,
     "job_number": job_number,
@@ -131,6 +132,7 @@ app.post '/github/post_receive', (req, res) ->
   if req.body.pull_request
     sha = req.body.pull_request.head.sha
 
+    # Get the sha status from earlier and insta-comment the status
     redis.hgetall sha, (err, obj) ->
       commenter = new PullRequestCommenter sha, obj.job_name, obj.job_number, obj.user, obj.repo, obj.succeeded
       commenter.updateComments (e, r) -> console.log e if e?
