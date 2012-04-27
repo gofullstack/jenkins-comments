@@ -7,20 +7,28 @@ _s      = require 'underscore.string'
 class PullRequestCommenter
   BUILDREPORT = "**Build Status**:"
 
-  constructor: (@sha, @job, @user, @repo, @succeeded) ->
-    @job_url = "#{process.env.JENKINS_URL}/job/#{@repo}/#{@job}"
-    @api = "https://#{process.env.GITHUB_USER_LOGIN}:#{process.env.GITHUB_USER_PASSWORD}@api.github.com/#{@user}/#{@repo}"
+  constructor: (@sha, @job_name, @job_number, @user, @repo, @succeeded) ->
+    @job_url = "#{process.env.JENKINS_URL}/job/#{@job_name}/#{@job_number}/console"
+    @api = "https://api.github.com/repos/#{@user}/#{@repo}"
+    @token = "?access_token=#{process.env.GITHUB_USER_TOKEN}"
 
   post: (path, obj, cb) =>
-    request.post { uri: "#{@api}#{path}", json: obj }, (e, r, body) ->
+    console.log "POST #{@api}#{path}#{@token}"
+    console.dir obj
+    request.post { uri: "#{@api}#{path}#{@token}", json: obj }, (e, r, body) ->
+      console.log body
       cb e, body
 
   get: (path, cb) =>
-    request.get { uri: "#{@api}#{path}", json: true }, (e, r, body) ->
+    console.log "GET #{@api}#{path}#{@token}"
+    request.get { uri: "#{@api}#{path}#{@token}", json: true }, (e, r, body) ->
+      console.log body
       cb e, body
 
   del: (path, cb) =>
-    request.del { uri: "#{@api}#{path}" }, (e, r, body) ->
+    console.log "DELETE #{@api}#{path}#{@token}"
+    request.del { uri: "#{@api}#{path}#{@token}" }, (e, r, body) ->
+      console.log body
       cb e, body
 
   getCommentsForIssue: (issue, cb) =>
@@ -36,14 +44,14 @@ class PullRequestCommenter
     @get "/pulls/#{id}", cb
 
   commentOnIssue: (issue, comment) =>
-    @post "/repos/#{@user}/#{@repo}/issues/#{issue}/comments", (body: comment), (e, body) ->
+    @post "/issues/#{issue}/comments", (body: comment), (e, body) ->
       console.log e if e?
 
   successComment: ->
-    "#{BUILDREPORT} `Succeeded` (#{@sha}, [job info](#{@job_url}))"
+    "#{BUILDREPORT} :green_heart: `Succeeded` (#{@sha}, [job info](#{@job_url}))"
 
   errorComment: ->
-    "#{BUILDREPORT} `Failed` (#{@sha}, [job info](#{@job_url}))"
+    "#{BUILDREPORT} :broken_heart: `Failed` (#{@sha}, [job info](#{@job_url}))"
 
   # Find the first open pull with a matching HEAD sha
   findMatchingPull: (pulls, cb) =>
@@ -89,13 +97,14 @@ app.configure 'production', ->
 # Jenkins lets us know when a build has failed or succeeded.
 app.get '/jenkins/post_build', (req, res) ->
   sha = req.param 'sha'
-  job = parseInt req.param 'job'
+  job_name = req.param 'job_name'
+  job_number = parseInt req.param 'job_number'
   user = req.param 'user'
   repo = req.param 'repo'
   succeeded = req.param('status') is 'success'
 
   # Look for an open pull request with this SHA and make comments.
-  commenter = new PullRequestCommenter sha, job, user, repo, succeeded
+  commenter = new PullRequestCommenter sha, job_name, job_number, user, repo, succeeded
   commenter.updateComments (e, r) -> console.log e if e?
   res.send 'Ok', 200
 
