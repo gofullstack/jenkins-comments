@@ -128,18 +128,25 @@ app.get '/jenkins/post_build', (req, res) ->
   res.send 200
 
 # GitHub lets us know when a pull request has been opened.
-app.post '/github/post_receive', (req, res, next) ->
-  if req.complete
-    if req.body.payload.pull_request
-      sha = req.body.payload.pull_request.head.sha
+app.post '/github/post_receive', (req, res) ->
+  console.dir req
+  console.dir req.body
+  console.dir req.body.payload
+  console.dir req.body.payload.pull_request
+  console.dir req.body.pull_request
 
-      # Get the sha status from earlier and insta-comment the status
-      redis.hgetall sha, (err, obj) ->
-        commenter = new PullRequestCommenter sha, obj.job_name, obj.job_number, obj.user, obj.repo, obj.succeeded
-        commenter.updateComments (e, r) -> console.log e if e?
+  pull_request = req.body.payload.pull_request
 
-      res.send 201
-    else
-      res.send 404
+  if pull_request
+    sha = pull_request.head.sha
+
+    # Get the sha status from earlier and insta-comment the status
+    redis.hgetall sha, (err, obj) ->
+      commenter = new PullRequestCommenter sha, obj.job_name, obj.job_number, obj.user, obj.repo, obj.succeeded
+      commenter.updateComments (e, r) -> console.log e if e?
+
+    res.send 201
+  else
+    res.send 404
 
 app.listen app.settings.port
