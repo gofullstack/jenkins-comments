@@ -110,7 +110,7 @@ app.get '/jenkins/post_build', (req, res) ->
 
 # GitHub lets us know when a pull request has been opened.
 app.post '/github/post_receive', (req, res) ->
-  console.dir req
+  console.dir req.body
   res.send 'Ok', 200
 
 app.listen app.settings.port
