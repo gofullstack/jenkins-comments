@@ -128,7 +128,9 @@ app.get '/jenkins/post_build', (req, res) ->
   res.send 200
 
 # GitHub lets us know when a pull request has been opened.
-app.post '/github/post_receive', (req, res) ->
+app.post '/github/post_receive', (req, res, next) ->
+  console.dir req.body
+
   if req.body.pull_request
     sha = req.body.pull_request.head.sha
 
