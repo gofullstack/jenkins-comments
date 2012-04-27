@@ -94,12 +94,13 @@ class PullRequestCommenter
 
 app = module.exports = express.createServer()
 
-app.configure 'development', ->
+app.configure ->
   app.use express.bodyParser()
+
+app.configure 'development', ->
   app.set "port", 3000
 
 app.configure 'production', ->
-  app.use express.bodyParser()
   app.use express.errorHandler()
   app.set "port", parseInt process.env.PORT
 
@@ -128,16 +129,10 @@ app.get '/jenkins/post_build', (req, res) ->
 
 # GitHub lets us know when a pull request has been opened.
 app.post '/github/post_receive', (req, res) ->
-  console.dir req
-  console.dir req.body
-  console.dir req.body.payload
-  console.dir req.body.payload.pull_request
-  console.dir req.body.pull_request
+  payload = JSON.parse req.body.payload
 
-  pull_request = req.body.payload.pull_request
-
-  if pull_request
-    sha = pull_request.head.sha
+  if payload.pull_request
+    sha = payload.pull_request.head.sha
 
     # Get the sha status from earlier and insta-comment the status
     redis.hgetall sha, (err, obj) ->
