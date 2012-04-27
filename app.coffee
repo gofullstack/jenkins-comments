@@ -130,10 +130,8 @@ app.get '/jenkins/post_build', (req, res) ->
 # GitHub lets us know when a pull request has been opened.
 app.post '/github/post_receive', (req, res, next) ->
   if req.complete
-    console.dir req.body
-
-    if req.body.pull_request
-      sha = req.body.pull_request.head.sha
+    if req.body.payload.pull_request
+      sha = req.body.payload.pull_request.head.sha
 
       # Get the sha status from earlier and insta-comment the status
       redis.hgetall sha, (err, obj) ->
