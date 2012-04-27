@@ -108,4 +108,9 @@ app.get '/jenkins/post_build', (req, res) ->
   commenter.updateComments (e, r) -> console.log e if e?
   res.send 'Ok', 200
 
+# GitHub lets us know when a pull request has been opened.
+app.post '/github/post_receive', (req, res) ->
+  console.dir req
+  res.send 'Ok', 200
+
 app.listen app.settings.port
