@@ -136,6 +136,9 @@ app.post '/github/post_receive', (req, res) ->
 
     # Get the sha status from earlier and insta-comment the status
     redis.hgetall sha, (err, obj) ->
+      # Convert stored string to boolean
+      obj.succeeded = (obj.succeeded == "true" ? true : false)
+
       commenter = new PullRequestCommenter sha, obj.job_name, obj.job_number, obj.user, obj.repo, obj.succeeded
       commenter.updateComments (e, r) -> console.log e if e?
 
