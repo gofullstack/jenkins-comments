@@ -104,6 +104,14 @@ app.configure 'production', ->
   app.use express.errorHandler()
   app.set "port", parseInt process.env.PORT
 
+# Route for uptime pings and general curiosity
+app.get '/', (req, res) ->
+  res.send '
+    <a href="https://github.com/cramerdev/jenkins-comments">
+      jenkins-comments
+    </a>
+  ', 200
+
 # Jenkins lets us know when a build has failed or succeeded.
 app.get '/jenkins/post_build', (req, res) ->
   sha = req.param 'sha'
