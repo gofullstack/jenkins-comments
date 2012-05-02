@@ -23,19 +23,19 @@ class PullRequestCommenter
     console.log "POST #{@api}#{path}#{@token}"
     console.dir obj
     request.post { uri: "#{@api}#{path}#{@token}", json: obj }, (e, r, body) ->
-      console.log body
+      console.log body if process.env.DEBUG
       cb e, body
 
   get: (path, cb) =>
     console.log "GET #{@api}#{path}#{@token}"
     request.get { uri: "#{@api}#{path}#{@token}", json: true }, (e, r, body) ->
-      console.log body
+      console.log body if process.env.DEBUG
       cb e, body
 
   del: (path, cb) =>
     console.log "DELETE #{@api}#{path}#{@token}"
     request.del { uri: "#{@api}#{path}#{@token}" }, (e, r, body) ->
-      console.log body
+      console.log body if process.env.DEBUG
       cb e, body
 
   getCommentsForIssue: (issue, cb) =>
