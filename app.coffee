@@ -128,7 +128,7 @@ app.get '/jenkins/post_build', (req, res) ->
     "user": user,
     "repo": repo,
     "succeeded": succeeded
-  }
+  } if sha
 
   # Look for an open pull request with this SHA and make comments.
   commenter = new PullRequestCommenter sha, job_name, job_number, user, repo, succeeded
