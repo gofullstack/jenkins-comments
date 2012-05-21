@@ -109,5 +109,5 @@ events:
 curl -u "MyCompany-bot:password" https://api.github.com/hub \
   -Fhub.mode=subscribe \
   -Fhub.topic=https://github.com/MyCompany/FooBar/events/pull_request \
-  -Fhub.callback=http://mycompany-jenkins-comments.herokuapp.com/github/MyCompany/FooBar
+  -Fhub.callback=http://mycompany-jenkins-comments.herokuapp.com/github/post_receive
 ```
