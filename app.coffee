@@ -115,25 +115,29 @@ app.get '/', (req, res) ->
 # Jenkins lets us know when a build has failed or succeeded.
 app.get '/jenkins/post_build', (req, res) ->
   sha = req.param 'sha'
-  job_name = req.param 'job_name'
-  job_number = parseInt req.param 'job_number'
-  user = req.param 'user'
-  repo = req.param 'repo'
-  succeeded = req.param('status') is 'success'
 
-  # Store the status of this sha for later
-  redis.hmset sha, {
-    "job_name": job_name,
-    "job_number": job_number,
-    "user": user,
-    "repo": repo,
-    "succeeded": succeeded
-  } if sha
+  if sha
+    job_name = req.param 'job_name'
+    job_number = parseInt req.param 'job_number'
+    user = req.param 'user'
+    repo = req.param 'repo'
+    succeeded = req.param('status') is 'success'
 
-  # Look for an open pull request with this SHA and make comments.
-  commenter = new PullRequestCommenter sha, job_name, job_number, user, repo, succeeded
-  commenter.updateComments (e, r) -> console.log e if e?
-  res.send 200
+    # Store the status of this sha for later
+    redis.hmset sha, {
+      "job_name": job_name,
+      "job_number": job_number,
+      "user": user,
+      "repo": repo,
+      "succeeded": succeeded
+    }
+
+    # Look for an open pull request with this SHA and make comments.
+    commenter = new PullRequestCommenter sha, job_name, job_number, user, repo, succeeded
+    commenter.updateComments (e, r) -> console.log e if e?
+    res.send 200
+  else
+    res.send 400
 
 # GitHub lets us know when a pull request has been opened.
 app.post '/github/post_receive', (req, res) ->
