@@ -34,7 +34,7 @@ git push heroku master
 heroku addons:add redistogo:nano
 
 heroku config:add JENKINS_URL=http://jenkins.mycompany.com
-heroku config:add NODE_ENV=production
+heroku config:add RACK_ENV=production
 
 heroku ps:dynos 1
 ```
@@ -111,3 +111,4 @@ curl -u "MyCompany-bot:password" https://api.github.com/hub \
   -Fhub.topic=https://github.com/MyCompany/FooBar/events/pull_request \
   -Fhub.callback=http://mycompany-jenkins-comments.herokuapp.com/github/post_receive
 ```
+
