@@ -1,3 +1,5 @@
+# Jenkins Comments [![Build Status](https://secure.travis-ci.org/cramerdev/jenkins-comments.png)](https://secure.travis-ci.org/cramerdev/jenkins-comments)
+
 ## Things you'll need
 
 * Jenkins
