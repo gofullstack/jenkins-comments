@@ -2,6 +2,8 @@ source :rubygems
 
 gem 'sinatra'
 
+gem 'rake'
+
 group :development do
   gem 'foreman'
   gem 'heroku'
