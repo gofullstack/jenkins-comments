@@ -1,4 +1,3 @@
 get '/' do
-  "Jenkins Comments"
+  '<a href="http://github.com/cramerdev/jenkins-comments">Jenkins Comments</a>'
 end
-
