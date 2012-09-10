@@ -54,6 +54,10 @@ class PullRequestCommenter
     @post "/issues/#{issue}/comments", (body: comment), (e, body) ->
       console.log e if e?
 
+  setCommitStatus: (issue, state) =>
+    @post "/repos/#{@user}/#{@repo}/#{@sha}", (body: {state:'success', :target_url:'http://www.google.com', description:'DDetails'} ), (e, body) ->
+      console.log e if e?
+
   successComment: ->
     "#{BUILDREPORT} :green_heart: `Succeeded` (#{@sha}, [job info](#{@job_url}))"
 
@@ -82,6 +86,7 @@ class PullRequestCommenter
   makePullComment: (pull, cb) =>
     comment = if @succeeded then @successComment() else @errorComment()
     @commentOnIssue pull.number, comment
+    @setCommitStatus pull.number, comment
     cb()
 
   updateComments: (cb) ->
