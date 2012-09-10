@@ -55,7 +55,7 @@ class PullRequestCommenter
       console.log e if e?
 
   setCommitStatus: (issue, state) =>
-    @post "/repos/#{@user}/#{@repo}/#{@sha}", (body: {state:'success', :target_url:'http://www.google.com', description:'DDetails'} ), (e, body) ->
+    @post "/repos/#{@user}/#{@repo}/#{@sha}", (body: "{'state':'success', 'target_url':'http://www.google.com', 'description':'DDetails'}" ), (e, body) ->
       console.log e if e?
 
   successComment: ->
