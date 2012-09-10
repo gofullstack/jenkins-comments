@@ -54,8 +54,8 @@ class PullRequestCommenter
     @post "/issues/#{issue}/comments", (body: comment), (e, body) ->
       console.log e if e?
 
-  setCommitStatus: (issue, state) =>
-    @post "/statuses/#{@sha}", (state:'success', target_url:'http://www.google.com', description:'DDetails'), (e, body) ->
+  setCommitStatus: (state) =>
+    @post "/statuses/#{@sha}", (state:state, target_url:@job_url, description:'job info'), (e, body) ->
       console.log e if e?
 
   successComment: ->
@@ -84,9 +84,8 @@ class PullRequestCommenter
       , () -> cb null, pull
 
   makePullComment: (pull, cb) =>
-    comment = if @succeeded then @successComment() else @errorComment()
-    @commentOnIssue pull.number, comment
-    @setCommitStatus pull.number, comment
+    state = if @succeeded then 'success' else 'failure'
+    @setCommitStatus state
     cb()
 
   updateComments: (cb) ->
