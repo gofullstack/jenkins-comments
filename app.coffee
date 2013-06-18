@@ -22,19 +22,19 @@ class PullRequestCommenter
   post: (path, obj, cb) =>
     console.log "POST #{@api}#{path}#{@token}"
     console.dir obj
-    request.post { uri: "#{@api}#{path}#{@token}", json: obj }, (e, r, body) ->
+    request.post { uri: "#{@api}#{path}#{@token}", json: obj, headers: 'User-Agent': 'Skyscrpr Status Commenter' }, (e, r, body) ->
       console.log body if process.env.DEBUG
       cb e, body
 
   get: (path, cb) =>
     console.log "GET #{@api}#{path}#{@token}"
-    request.get { uri: "#{@api}#{path}#{@token}", json: true }, (e, r, body) ->
+    request.get { uri: "#{@api}#{path}#{@token}", json: true, headers: 'User-Agent': 'Skyscrpr Status Commenter' }, (e, r, body) ->
       console.log body if process.env.DEBUG
       cb e, body
 
   del: (path, cb) =>
     console.log "DELETE #{@api}#{path}#{@token}"
-    request.del { uri: "#{@api}#{path}#{@token}" }, (e, r, body) ->
+    request.del { uri: "#{@api}#{path}#{@token}", headers: 'User-Agent': 'Skyscrpr Status Commenter' }, (e, r, body) ->
       console.log body if process.env.DEBUG
       cb e, body
 
@@ -44,51 +44,21 @@ class PullRequestCommenter
   deleteComment: (id, cb) =>
     @del "/issues/comments/#{id}", cb
 
-  getPulls: (cb) =>
-    @get "/pulls", cb
-
-  getPull: (id, cb) =>
-    @get "/pulls/#{id}", cb
-
   commentOnIssue: (issue, comment) =>
     @post "/issues/#{issue}/comments", (body: comment), (e, body) ->
       console.log e if e?
 
-  successComment: ->
-    "#{BUILDREPORT} :green_heart: `Succeeded` (#{@sha}, [job info](#{@job_url}))"
+  setCommitStatus: (state) =>
+    @post "/statuses/#{@sha}", (state:state, target_url:@job_url, description:'job info'), (e, body) ->
+      console.log e if e?
 
-  errorComment: ->
-    "#{BUILDREPORT} :broken_heart: `Failed` (#{@sha}, [job info](#{@job_url}))"
-
-  # Find the first open pull with a matching HEAD sha
-  findMatchingPull: (pulls, cb) =>
-    pulls = _.filter pulls, (p) => p.state is 'open'
-    async.detect pulls, (pull, detect_if) =>
-      @getPull pull.number, (e, { head }) =>
-        return cb e if e?
-        detect_if head.sha is @sha
-    , (match) =>
-      return cb "No pull request for #{@sha} found" unless match?
-      cb null, match
-
-  removePreviousPullComments: (pull, cb) =>
-    @getCommentsForIssue pull.number, (e, comments) =>
-      return cb e if e?
-      old_comments = _.filter comments, ({ body }) -> _s.include body, BUILDREPORT
-      async.forEach old_comments, (comment, done_delete) =>
-        @deleteComment comment.id, done_delete
-      , () -> cb null, pull
-
-  makePullComment: (pull, cb) =>
-    comment = if @succeeded then @successComment() else @errorComment()
-    @commentOnIssue pull.number, comment
+  makePullComment: (cb) =>
+    state = if @succeeded then 'success' else 'failure'
+    @setCommitStatus state
     cb()
 
   updateComments: (cb) ->
     async.waterfall [
-      @getPulls
-      @findMatchingPull
-      @removePreviousPullComments
       @makePullComment
     ], cb
 
@@ -142,7 +112,6 @@ app.get '/jenkins/post_build', (req, res) ->
 # GitHub lets us know when a pull request has been opened.
 app.post '/github/post_receive', (req, res) ->
   payload = JSON.parse req.body.payload
-
   if payload.pull_request
     sha = payload.pull_request.head.sha
 
