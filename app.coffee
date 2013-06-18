@@ -22,19 +22,19 @@ class PullRequestCommenter
   post: (path, obj, cb) =>
     console.log "POST #{@api}#{path}#{@token}"
     console.dir obj
-    request.post { uri: "#{@api}#{path}#{@token}", json: obj }, (e, r, body) ->
+    request.post { uri: "#{@api}#{path}#{@token}", json: obj, headers: 'User-Agent': 'Skyscrpr Status Commenter' }, (e, r, body) ->
       console.log body if process.env.DEBUG
       cb e, body
 
   get: (path, cb) =>
     console.log "GET #{@api}#{path}#{@token}"
-    request.get { uri: "#{@api}#{path}#{@token}", json: true }, (e, r, body) ->
+    request.get { uri: "#{@api}#{path}#{@token}", json: true, headers: 'User-Agent': 'Skyscrpr Status Commenter' }, (e, r, body) ->
       console.log body if process.env.DEBUG
       cb e, body
 
   del: (path, cb) =>
     console.log "DELETE #{@api}#{path}#{@token}"
-    request.del { uri: "#{@api}#{path}#{@token}" }, (e, r, body) ->
+    request.del { uri: "#{@api}#{path}#{@token}", headers: 'User-Agent': 'Skyscrpr Status Commenter' }, (e, r, body) ->
       console.log body if process.env.DEBUG
       cb e, body
 
@@ -51,12 +51,6 @@ class PullRequestCommenter
   setCommitStatus: (state) =>
     @post "/statuses/#{@sha}", (state:state, target_url:@job_url, description:'job info'), (e, body) ->
       console.log e if e?
-
-  successComment: ->
-    "#{BUILDREPORT} :green_heart: `Succeeded` (#{@sha}, [job info](#{@job_url}))"
-
-  errorComment: ->
-    "#{BUILDREPORT} :broken_heart: `Failed` (#{@sha}, [job info](#{@job_url}))"
 
   makePullComment: (cb) =>
     state = if @succeeded then 'success' else 'failure'
