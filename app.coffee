@@ -44,12 +44,6 @@ class PullRequestCommenter
   deleteComment: (id, cb) =>
     @del "/issues/comments/#{id}", cb
 
-  getPulls: (cb) =>
-    @get "/pulls", cb
-
-  getPull: (id, cb) =>
-    @get "/pulls/#{id}", cb
-
   commentOnIssue: (issue, comment) =>
     @post "/issues/#{issue}/comments", (body: comment), (e, body) ->
       console.log e if e?
@@ -64,25 +58,6 @@ class PullRequestCommenter
   errorComment: ->
     "#{BUILDREPORT} :broken_heart: `Failed` (#{@sha}, [job info](#{@job_url}))"
 
-  # Find the first open pull with a matching HEAD sha
-  findMatchingPull: (pulls, cb) =>
-    pulls = _.filter pulls, (p) => p.state is 'open'
-    async.detect pulls, (pull, detect_if) =>
-      @getPull pull.number, (e, { head }) =>
-        return cb e if e?
-        detect_if head.sha is @sha
-    , (match) =>
-      return cb "No pull request for #{@sha} found" unless match?
-      cb null, match
-
-  removePreviousPullComments: (pull, cb) =>
-    @getCommentsForIssue pull.number, (e, comments) =>
-      return cb e if e?
-      old_comments = _.filter comments, ({ body }) -> _s.include body, BUILDREPORT
-      async.forEach old_comments, (comment, done_delete) =>
-        @deleteComment comment.id, done_delete
-      , () -> cb null, pull
-
   makePullComment: (pull, cb) =>
     state = if @succeeded then 'success' else 'failure'
     @setCommitStatus state
@@ -90,9 +65,6 @@ class PullRequestCommenter
 
   updateComments: (cb) ->
     async.waterfall [
-      @getPulls
-      @findMatchingPull
-      @removePreviousPullComments
       @makePullComment
     ], cb
 
