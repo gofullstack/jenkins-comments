@@ -58,7 +58,7 @@ class PullRequestCommenter
   errorComment: ->
     "#{BUILDREPORT} :broken_heart: `Failed` (#{@sha}, [job info](#{@job_url}))"
 
-  makePullComment: (pull, cb) =>
+  makePullComment: (cb) =>
     state = if @succeeded then 'success' else 'failure'
     @setCommitStatus state
     cb()
@@ -118,21 +118,19 @@ app.get '/jenkins/post_build', (req, res) ->
 # GitHub lets us know when a pull request has been opened.
 app.post '/github/post_receive', (req, res) ->
   payload = JSON.parse req.body.payload
-  console.log payload
-  res.send 200
-  #if payload.pull_request
-  #  sha = payload.pull_request.head.sha
+  if payload.pull_request
+    sha = payload.pull_request.head.sha
 
-  #  # Get the sha status from earlier and insta-comment the status
-  #  redis.hgetall sha, (err, obj) ->
-  #    # Convert stored string to boolean
-  #    obj.succeeded = (obj.succeeded == "true" ? true : false)
+    # Get the sha status from earlier and insta-comment the status
+    redis.hgetall sha, (err, obj) ->
+      # Convert stored string to boolean
+      obj.succeeded = (obj.succeeded == "true" ? true : false)
 
-  #    commenter = new PullRequestCommenter sha, obj.job_name, obj.job_number, obj.user, obj.repo, obj.succeeded
-  #    commenter.updateComments (e, r) -> console.log e if e?
+      commenter = new PullRequestCommenter sha, obj.job_name, obj.job_number, obj.user, obj.repo, obj.succeeded
+      commenter.updateComments (e, r) -> console.log e if e?
 
-  #  res.send 201
-  #else
-  #  res.send 404
+    res.send 201
+  else
+    res.send 404
 
 app.listen app.settings.port
